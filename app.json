@@ -1,0 +1,12 @@
+{
+  "name": "RestaurantDelivery",
+  "displayName": "Restaurant Delivery",
+  "expo": {
+    "name": "Restaurant Delivery",
+    "slug": "restaurant-delivery",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
