@@ -1,7 +1,7 @@
-const { verifyToken } = require('../utils/jwt');
-const User = require('../models/User');
+import { verifyToken } from '../utils/jwt.js';
+import User from '../models/Users.js';
 
-const auth = async (req, res, next) => {
+export const auth = async (req, res, next) => {
   try {
     // Get token from header
     const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -12,6 +12,7 @@ const auth = async (req, res, next) => {
 
     // Verify token
     const decoded = verifyToken(token);
+     console.log('🔍 Decoded token:', decoded); 
 
     if (!decoded) {
       return res.status(401).json({ error: 'Invalid or expired token' });
@@ -19,8 +20,10 @@ const auth = async (req, res, next) => {
 
     // Find user
     const user = await User.findById(decoded.userId);
+     console.log('🔍 Found user:', user);
+    
 
-    if (!user || !user.isActive) {
+    if (!user) {
       return res.status(401).json({ error: 'User not found or inactive' });
     }
 
@@ -30,16 +33,16 @@ const auth = async (req, res, next) => {
 
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Authentication failed' });
+    res.status(401).json({ error: `${error.message}` });
   }
 };
 
 // Check if user is staff
-const isStaff = (req, res, next) => {
-  if (req.user.role !== 'staff') {
-    return res.status(403).json({ error: 'Access denied. Staff only.' });
-  }
-  next();
-};
 
-module.exports = { auth, isStaff };
+
+export const isStaff = (req, res, next) => {
+if (req.user.role !== 'staff') {
+ return res.status(403).json({ error: 'Access denied. Staff only.' });
+ }
+ next();
+};

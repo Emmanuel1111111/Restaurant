@@ -1,12 +1,12 @@
-const express = require('express');
-const router = express.Router();
-const { body } = require('express-validator');
-const cartController = require('../controllers/cartController');
-const { auth } = require('../middleware/auth');
-const validateRequest = require('../middleware/validateRequest');
+import express from 'express';
+import { body } from 'express-validator';
+import {addToCart,updateCartItem,removeFromCart,clearCart,getCart} from '../controllers/cartController.js';
+import {auth} from '../middleware/auth.js';
+import {validateRequest} from '../middleware/validateRequest.js';
 
+const router = express.Router();
 // Get cart
-router.get('/', auth, cartController.getCart);
+router.get('/cart', auth, getCart);
 
 // Add item to cart
 router.post(
@@ -17,7 +17,7 @@ router.post(
     body('quantity').isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
   ],
   validateRequest,
-  cartController.addToCart
+ addToCart
 );
 
 // Update item quantity
@@ -29,7 +29,7 @@ router.put(
     body('quantity').isInt({ min: 0 }).withMessage('Quantity must be 0 or more'),
   ],
   validateRequest,
-  cartController.updateCartItem
+updateCartItem
 );
 
 // Remove item from cart
@@ -40,10 +40,11 @@ router.delete(
     body('itemIndex').isInt({ min: 0 }).withMessage('Valid item index is required'),
   ],
   validateRequest,
-  cartController.removeFromCart
+ removeFromCart
 );
 
 // Clear entire cart
-router.delete('/clear', auth, cartController.clearCart);
+router.delete('/clear', auth, clearCart);
 
-module.exports = router;
+
+export default router;

@@ -1,30 +1,42 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const MenuCategory = require('../models/MenuCategory');
-const MenuItem = require('../models/MenuItem');
-const Settings = require('../models/Settings');
-const User = require('../models/User');
+
+import bcrypt from 'bcrypt';
+import User from '../models/Users.js';
+import mongoose from 'mongoose';
+import MenuCategory from '../models/MenuCategory.js';
+import MenuItem from '../models/menuItem.js';
+import Settings from '../models/settings.js';
+import Cart from '../models/Cart.js';
+import { configDotenv } from 'dotenv';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const seedDatabase = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to MongoDB');
-
+    
     // Clear existing data
     await MenuCategory.deleteMany({});
     await MenuItem.deleteMany({});
     await Settings.deleteMany({});
+    await User.deleteMany({});
+    await Cart.deleteMany({})
     console.log('  Cleared existing data');
+     const salt= await bcrypt.genSalt(10);
+     const hashedPassword = await bcrypt.hash('managerpassword', salt);
 
     // Create staff user
     const staff = new User({
-      phone: '233500000000',
+      phone: '233509854370',
       name: 'Restaurant Manager',
       email: 'manager@restaurant.com',
-      role: 'staff',
-    });
+      password: hashedPassword,
+      role: 'admin',
+    }); 
     await staff.save();
-    console.log('✓ Created staff user');
+    console.log('✓ Created staff user'); 
+    const user = await User.findOne({});
 
     // Create categories
     const categories = [
@@ -101,7 +113,6 @@ const seedDatabase = async () => {
         isPopular: true,
       },
 
-      // Drinks
       {
         category: createdCategories[2]._id,
         name: 'Fresh Coconut Water',
@@ -142,8 +153,39 @@ const seedDatabase = async () => {
       },
     ];
 
-    await MenuItem.insertMany(menuItems);
+   const Menu= await MenuItem.insertMany(menuItems);
     console.log('✓ Created menu items');
+
+
+
+    const cartItems = [
+      { 
+         menuItem: Menu[0]._id,
+         quantity: 2,
+         selectedAddOns: Menu[0].addOns ? Menu[0].addOns.map(addOn =>({name: addOn.name, price: addOn.price })): [],
+          subtotal: Menu[0].price * 2 + (Menu[0].addOns ? Menu[0].addOns.reduce((sum, addOn) => sum + addOn.price, 0) * 2 : 0)
+      },
+      {
+         menuItem: Menu[2]._id,
+         quantity: 1,
+         selectedAddOns: Menu[2].addOns ? Menu[2].addOns.map(addOn =>({name: addOn.name, price: addOn.price })): [],
+          subtotal: Menu[2].price * 1 + (Menu[2].addOns ? Menu[2].addOns.reduce((sum, addOn) => sum + addOn.price, 0) * 1 : 0)
+      },
+      {
+          menuItem: Menu[4]._id,
+          quantity: 1,
+          selectedAddOns: Menu[4].addOns ? Menu[4].addOns.map(addOn =>({name: addOn.name, price: addOn.price })): [],
+          subtotal: Menu[4].price * 1 + (Menu[4].addOns ? Menu[4].addOns.reduce((sum, addOn) => sum + addOn.price, 0) * 1 : 0)
+      }
+    ];
+
+    const cart = new Cart({
+      customer: user._id,
+      items: cartItems,
+      deliveryFee: 5
+    });
+    await cart.save();
+    console.log('✓ Created cart items');
 
     // Create settings
     const settings = new Settings({

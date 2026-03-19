@@ -1,5 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { API_BASE_URL, TIMEOUT, TOKEN_KEY } from '../utils/constants';
 
 const api = axios.create({
@@ -14,6 +15,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem(TOKEN_KEY);
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -24,6 +26,7 @@ api.interceptors.request.use(
   }
 );
 
+
 // Response interceptor - handle errors
 api.interceptors.response.use(
   (response) => response.data,
@@ -32,14 +35,17 @@ api.interceptors.response.use(
       // Handle unauthorized - logout
       AsyncStorage.removeItem(TOKEN_KEY);
     }
-    console.log('[v0] API Error:', error.response?.data || error.message);
+    console.log('API Error:', error.response?.data || error.message);
     return Promise.reject(error.response?.data || error.message);
   }
 );
 
+
 // Auth APIs
 export const sendOTP = (phone) => api.post('/auth/send-otp', { phone });
+
 export const verifyOTP = (phone, otp) => api.post('/auth/verify-otp', { phone, otp });
+
 export const getMe = () => api.get('/auth/me');
 export const updateProfile = (data) => api.put('/auth/profile', data);
 
@@ -50,9 +56,12 @@ export const searchMenu = (query) => api.get(`/menu/search?q=${query}`);
 
 // Order APIs
 export const createOrder = (data) => api.post('/orders', data);
+
 export const getMyOrders = (status) => 
   api.get(`/orders/my-orders${status ? `?status=${status}` : ''}`);
+
 export const getOrder = (id) => api.get(`/orders/${id}`);
+
 export const rateOrder = (id, rating, review) => 
   api.post(`/orders/${id}/rate`, { rating, review });
 
@@ -66,12 +75,17 @@ export const getSettings = () => api.get('/settings');
 
 // Cart APIs
 export const getCart = () => api.get('/cart');
+
 export const addToCart = (menuItemId, quantity, selectedAddOns = []) =>
   api.post('/cart/add', { menuItemId, quantity, selectedAddOns });
+
 export const updateCartItem = (itemIndex, quantity) =>
   api.put('/cart/update', { itemIndex, quantity });
+
 export const removeFromCart = (itemIndex) =>
   api.delete('/cart/remove', { data: { itemIndex } });
+
+
 export const clearCart = () => api.delete('/cart/clear');
 
 export default api;

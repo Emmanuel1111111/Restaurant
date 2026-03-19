@@ -1,5 +1,5 @@
 // Calculate distance between two coordinates (Haversine formula)
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
+export const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // Earth's radius in km
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
@@ -18,10 +18,10 @@ const toRad = (value) => {
 };
 
 // Format phone number for Ghana
-const formatPhoneNumber = (phone) => {
+export const formatPhoneNumber = (phone) => {
   // Remove all non-digits
   let cleaned = phone.replace(/\D/g, '');
-
+  
   // Add country code if missing
   if (!cleaned.startsWith('233')) {
     if (cleaned.startsWith('0')) {
@@ -30,26 +30,21 @@ const formatPhoneNumber = (phone) => {
       cleaned = '233' + cleaned;
     }
   }
-
-  return cleaned;
+  
+  // Add the + prefix for E.164 format
+  return '+' + cleaned;
 };
 
 // Format currency (Ghana Cedis)
-const formatCurrency = (amount) => {
+export const formatCurrency = (amount) => {
   return `GH₵${parseFloat(amount).toFixed(2)}`;
 };
 
 // Calculate estimated delivery time
-const calculateDeliveryTime = (distance) => {
+export const calculateDeliveryTime = (distance) => {
   // Average speed: 20 km/h
   const travelTime = (distance / 20) * 60; // in minutes
   const preparationTime = 20; // minutes
   return Math.ceil(travelTime + preparationTime);
 };
 
-module.exports = {
-  calculateDistance,
-  formatPhoneNumber,
-  formatCurrency,
-  calculateDeliveryTime,
-};

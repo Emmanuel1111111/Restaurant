@@ -1,7 +1,7 @@
-const Settings = require('../models/Settings');
+import Settings from '../models/settings.js';
 
 // Get settings
-exports.getSettings = async (req, res) => {
+export const getSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
 
@@ -42,7 +42,7 @@ exports.getSettings = async (req, res) => {
 };
 
 // Update settings (staff only)
-exports.updateSettings = async (req, res) => {
+export const updateSettings = async (req, res) => {
   try {
     const updates = req.body;
 
@@ -65,7 +65,7 @@ exports.updateSettings = async (req, res) => {
 };
 
 // Toggle accepting orders
-exports.toggleAcceptingOrders = async (req, res) => {
+export const toggleAcceptingOrders = async (req, res) => {
   try {
     const settings = await Settings.findOne();
 

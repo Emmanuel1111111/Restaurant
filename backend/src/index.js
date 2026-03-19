@@ -1,19 +1,22 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const connectDB = require('./config/database');
-const errorHandler = require('./middleware/errorHandler');
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import {connectDB }from './config/database.js';
+import {errorHandler} from './middleware/errorHandler.js';
+
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const menuRoutes = require('./routes/menu');
-const orderRoutes = require('./routes/orders');
-const paymentRoutes = require('./routes/payment');
-const settingsRoutes = require('./routes/settings');
-const cartRoutes = require('./routes/cart'); // Added cart routes import
+import authRoutes from './routes/auth.js';
+import menuRoutes from './routes/menu.js';
+import orderRoutes from './routes/orders.js';
+import paymentRoutes from './routes/payment.js';
+import settingsRoutes from './routes/settings.js';
+import cartRoutes from './routes/cart.js';
 
+ 
+dotenv.config();
 const app = express();
 
 // Connect to MongoDB
@@ -26,18 +29,25 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+
+// Auth middleware
+import { auth } from './middleware/auth.js';
+
+
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/menu', menuRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/payment', paymentRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/cart', cartRoutes); // Added cart routes
+app.use('/api', authRoutes);
+app.use('/api', menuRoutes);
+app.use('/api', orderRoutes);
+app.use('/api', paymentRoutes);
+app.use('/api', settingsRoutes);
+app.use('/api', cartRoutes);
+
+
+
 
 // 404 handler
 app.use((req, res) => {
@@ -48,7 +58,7 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV}`);

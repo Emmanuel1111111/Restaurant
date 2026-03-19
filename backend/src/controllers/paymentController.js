@@ -1,10 +1,10 @@
-const crypto = require('crypto');
-const { initializePayment, verifyPayment } = require('../services/paystackService');
-const Order = require('../models/Order');
-const User = require('../models/User');
+import crypto from 'crypto';  
+import {initializePayment, verifyPayment }from '../services/paystackService.js';
+import Order from '../models/order.js';
+import User from '../models/Users.js';
 
 // Initialize payment
-exports.initializePayment = async (req, res) => {
+export const initializePayments = async (req, res) => {
   try {
     const { amount, orderId } = req.body;
 
@@ -32,7 +32,7 @@ exports.initializePayment = async (req, res) => {
 };
 
 // Verify payment
-exports.verifyPayment = async (req, res) => {
+export const verifyPayments = async (req, res) => {
   try {
     const { reference } = req.params;
 
@@ -64,7 +64,7 @@ exports.verifyPayment = async (req, res) => {
 };
 
 // Paystack webhook (for real-time payment notifications)
-exports.paystackWebhook = async (req, res) => {
+export const paystackWebhook = async (req, res) => {
   try {
     const event = req.body;
 

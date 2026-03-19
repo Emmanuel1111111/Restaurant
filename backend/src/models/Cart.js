@@ -1,62 +1,53 @@
-const mongoose = require('mongoose');
-const Users = require('./Users');
+import Users from "../models/Users.js";  
+import mongoose from 'mongoose';
+ 
 
 const cartItemSchema = new mongoose.Schema({
   menuItem: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'MenuItem',
-    required: true,
+    ref: 'MenuItem',        
+    required: true
   },
-  name: String, 
-  price: Number, 
   quantity: {
     type: Number,
     required: true,
     min: 1,
+    default: 1
   },
-  addOns: [{
+  selectedAddOns: [{        
     name: String,
-    price: Number,
+    price: Number
   }],
-  subtotal: Number,
+  subtotal: {
+    type: Number,
+    default: 0
+  }
 });
 
 const cartSchema = new mongoose.Schema({
   customer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Users',
+    ref: 'User',            
     required: true,
-    unique: true, // One cart per customer
+    unique: true
   },
   items: [cartItemSchema],
-  subtotal: {
-    type: Number,
-    default: 0,
-  },
   deliveryFee: {
     type: Number,
-    default: 0,
+    default: 5.00
   },
   total: {
     type: Number,
-    default: 0,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
+    default: 0
+  }
+}, {
+  timestamps: true
 });
 
-// Auto-calculate totals before saving
-cartSchema.pre('save', async function(next) {
-  this.subtotal = this.items.reduce((sum, item) => sum + item.subtotal, 0);
-  this.total = this.subtotal + this.deliveryFee;
-  this.updatedAt = Date.now();
+
+cartSchema.pre('save', function(next) {
+  this.total = this.items.reduce((sum, item) => sum + item.subtotal, 0) + this.deliveryFee;
   next();
 });
 
-module.exports = mongoose.model('Cart', cartSchema);
+export default mongoose.model('Cart', cartSchema);

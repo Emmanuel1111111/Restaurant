@@ -1,10 +1,13 @@
-const express = require('express');
+import express from 'express';
+import { body } from 'express-validator';
+import {paystackWebhook,verifyPayments, initializePayments} from '../controllers/paymentController.js';
+import {auth} from '../middleware/auth.js';
+import {validateRequest }from '../middleware/validateRequest.js';
+
 const router = express.Router();
-const paymentController = require('../controllers/paymentController');
-const { auth } = require('../middleware/auth');
 
-router.post('/initialize', auth, paymentController.initializePayment);
-router.get('/verify/:reference', auth, paymentController.verifyPayment);
-router.post('/webhook', paymentController.paystackWebhook);
+router.post('/initialize', auth, initializePayments);
+router.get('/verify/:reference', auth,verifyPayments);
+router.post('/webhook', paystackWebhook);
 
-module.exports = router;
+export default router;

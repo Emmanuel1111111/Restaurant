@@ -1,9 +1,10 @@
-const Cart = require('../models/Cart');
-const MenuItem = require('../models/MenuItem');
-const Settings = require('../models/Settings');
+import { log } from 'console';
+import Cart from '../models/Cart.js';
+import  MenuItem from '../models/menuItem.js';
+import Settings from '../models/settings.js';
 
 // Get cart
-exports.getCart = async (req, res) => {
+export const getCart = async (req, res) => {
   try {
     let cart = await Cart.findOne({ customer: req.userId })
       .populate('items.menuItem', 'name image price addOns');
@@ -21,7 +22,7 @@ exports.getCart = async (req, res) => {
   }
 };
 // Add item to cart
-exports.addToCart = async (req, res) => {
+export const addToCart = async (req, res) => {
   try {
     const { menuItemId, quantity, selectedAddOns } = req.body;
 
@@ -83,7 +84,7 @@ exports.addToCart = async (req, res) => {
 
     // Get delivery fee from settings
     const settings = await Settings.findOne();
-    cart.deliveryFee = settings?.delivery.fee || 5;
+    cart.deliveryFee = settings?.delivery || 5;
 
     await cart.save();
 
@@ -95,47 +96,133 @@ exports.addToCart = async (req, res) => {
 };
 
 // Update cart item quantity
-exports.updateCartItem = async (req, res) => {
+export const updateCartItem = async (req, res) => {
   try {
     const { itemIndex, quantity } = req.body;
 
-    const cart = await Cart.findOne({ customer: req.userId });
+    // Validate required fields
+    if (itemIndex === undefined || itemIndex === null) {
+      return res.status(400).json({ error: 'Item index is required' });
+    }
+
+    if (quantity === undefined || quantity === null) {
+      return res.status(400).json({ error: 'Quantity is required' });
+    }
+
+    // Find cart and populate menu items
+    const cart = await Cart.findOne({ customer: req.userId })
+      .populate('items.menuItem');
 
     if (!cart) {
       return res.status(404).json({ error: 'Cart not found' });
     }
 
+    // Validate item index
     if (itemIndex < 0 || itemIndex >= cart.items.length) {
-      return res.status(400).json({ error: 'Invalid item index' });
+      return res.status(400).json({ 
+        error: 'Invalid item index',
+        details: `Index ${itemIndex} is out of range. Cart has ${cart.items.length} items.`
+      });
     }
 
+    // Get the item to update
     const item = cart.items[itemIndex];
-    const menuItem = await MenuItem.findById(item.menuItem);
 
+    // Handle item removal (quantity <= 0)
     if (quantity <= 0) {
-      // Remove item
       cart.items.splice(itemIndex, 1);
-    } else {
-      // Update quantity and recalculate subtotal
-      const pricePerUnit = item.price;
-      const addOnsTotal = item.addOns.reduce((sum, addon) => sum + addon.price, 0);
-      const unitTotal = pricePerUnit + addOnsTotal;
       
-      item.quantity = quantity;
-      item.subtotal = unitTotal * quantity;
+      // Recalculate total
+      const itemsSubtotal = cart.items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+      cart.total = itemsSubtotal + (cart.deliveryFee || 0);
+      
+      await cart.save();
+      
+      return res.json({ 
+        success: true, 
+        message: 'Item removed from cart',
+        cart 
+      });
     }
 
+    // Get menu item details
+    let menuItem = item.menuItem;
+
+    // If menuItem is not populated (just an ID), fetch it
+    if (!menuItem._id) {
+      menuItem = await MenuItem.findById(item.menuItem);
+      
+      if (!menuItem) {
+        return res.status(404).json({ error: 'Menu item not found' });
+      }
+    }
+
+    // Validate menu item price
+    const basePrice = Number(menuItem.price);
+    
+    if (!menuItem.price || isNaN(basePrice)) {
+      return res.status(500).json({ 
+        error: 'Invalid menu item price',
+        details: 'Menu item has invalid or missing price'
+      });
+    }
+
+    // Calculate add-ons total with validation
+    const addOnsTotal = (item.addOns || []).reduce((sum, addon) => {
+      const addonPrice = Number(addon.price);
+      
+      if (!addon.price || isNaN(addonPrice)) {
+        return sum;
+      }
+      
+      return sum + addonPrice;
+    }, 0);
+
+    // Calculate unit total and subtotal
+    const unitTotal = basePrice + addOnsTotal;
+    const newSubtotal = unitTotal * quantity;
+
+    // Validate final calculation
+    if (isNaN(newSubtotal)) {
+      return res.status(500).json({ 
+        error: 'Price calculation failed',
+        details: 'Subtotal calculation resulted in NaN'
+      });
+    }
+
+    // Update item
+    item.quantity = quantity;
+    item.subtotal = newSubtotal;
+
+    // Recalculate cart total
+    const itemsSubtotal = cart.items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+    cart.total = itemsSubtotal + (cart.deliveryFee || 0);
+
+    // Save cart
     await cart.save();
 
-    res.json({ success: true, cart });
+    res.json({ 
+      success: true, 
+      message: 'Cart item updated successfully',
+      cart,
+      updated: {
+        itemIndex,
+        quantity,
+        subtotal: newSubtotal
+      }
+    });
+
   } catch (error) {
     console.error('Update Cart Item Error:', error);
-    res.status(500).json({ error: 'Failed to update cart item' });
+    
+    res.status(500).json({ 
+      error: 'Failed to update cart item',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
-
 // Remove item from cart
-exports.removeFromCart = async (req, res) => {
+export const removeFromCart = async (req, res) => {
   try {
     const { itemIndex } = req.body;
 
@@ -144,6 +231,7 @@ exports.removeFromCart = async (req, res) => {
     if (!cart) {
       return res.status(404).json({ error: 'Cart not found' });
     }
+
 
     if (itemIndex < 0 || itemIndex >= cart.items.length) {
       return res.status(400).json({ error: 'Invalid item index' });
@@ -160,7 +248,7 @@ exports.removeFromCart = async (req, res) => {
 };
 
 // Clear cart
-exports.clearCart = async (req, res) => {
+export const clearCart = async (req, res) => {
   try {
     const cart = await Cart.findOne({ customer: req.userId });
 

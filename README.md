@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# Restaurant
-=======
 # Restaurant Delivery App - Customer App
 
 A fully-featured React Native food delivery application for Ghana with OTP authentication, menu browsing, cart management, and real-time order tracking.
@@ -320,4 +317,4 @@ MIT
 ---
 
 For backend setup, see `../backend/README.md`
->>>>>>> 6d3aa88a (Initial Commit)
+  

@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from "axios";
 
 const paystackAPI = axios.create({
   baseURL: 'https://api.paystack.co',
@@ -9,7 +9,7 @@ const paystackAPI = axios.create({
 });
 
 // Initialize payment
-const initializePayment = async (email, amount, reference, metadata = {}) => {
+export const initializePayment = async (email, amount, reference, metadata = {}) => {
   try {
     const response = await paystackAPI.post('/transaction/initialize', {
       email,
@@ -27,7 +27,7 @@ const initializePayment = async (email, amount, reference, metadata = {}) => {
 };
 
 // Verify payment
-const verifyPayment = async (reference) => {
+export const verifyPayment = async (reference) => {
   try {
     const response = await paystackAPI.get(`/transaction/verify/${reference}`);
     return response.data;
@@ -38,7 +38,7 @@ const verifyPayment = async (reference) => {
 };
 
 // Initiate refund
-const refundPayment = async (reference, amount) => {
+export const refundPayment = async (reference, amount) => {
   try {
     const response = await paystackAPI.post('/refund', {
       transaction: reference,
@@ -52,8 +52,3 @@ const refundPayment = async (reference, amount) => {
   }
 };
 
-module.exports = {
-  initializePayment,
-  verifyPayment,
-  refundPayment,
-};

@@ -1,10 +1,11 @@
-const express = require('express');
-const router = express.Router();
-const { body } = require('express-validator');
-const orderController = require('../controllers/orderController');
-const { auth, isStaff } = require('../middleware/auth');
-const validateRequest = require('../middleware/validateRequest');
+import express from 'express';
+import { body } from 'express-validator';
+import {getOrder,rateOrder,getAllOrders,getOrderStats,getMyOrders, createOrder, updateOrderStatus, cancelOrder}from '../controllers/orderController.js';
+import {auth} from '../middleware/auth.js';
+import {isStaff} from '../middleware/auth.js';
+import {validateRequest} from '../middleware/validateRequest.js';
 
+const router = express.Router();
 // Customer routes
 router.post(
   '/',
@@ -15,17 +16,18 @@ router.post(
     body('paymentMethod').isIn(['mobile_money', 'card', 'cash']).withMessage('Invalid payment method'),
   ],
   validateRequest,
-  orderController.createOrder
+ createOrder
 );
 
-router.get('/my-orders', auth, orderController.getMyOrders);
-router.get('/:id', auth, orderController.getOrder);
-router.post('/:id/rate', auth, orderController.rateOrder);
+router.get('/my-orders', auth, getMyOrders);
+router.get('/:id', auth, getOrder);
+router.post('/:id/rate', auth, rateOrder);
 
 // Staff routes
-router.get('/', auth, isStaff, orderController.getAllOrders);
-router.put('/:id/status', auth, isStaff, orderController.updateOrderStatus);
-router.put('/:id/cancel', auth, isStaff, orderController.cancelOrder);
-router.get('/stats/summary', auth, isStaff, orderController.getOrderStats);
+router.get('/', auth, isStaff, getAllOrders);
+router.put('/:id/status', auth, isStaff, updateOrderStatus);
+router.put('/:id/cancel', auth, isStaff, cancelOrder);
+router.get('/stats/summary', auth, isStaff, getOrderStats);
 
-module.exports = router;
+
+export default router;

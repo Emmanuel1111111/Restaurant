@@ -1,12 +1,12 @@
-const MenuItem = require('../models/MenuItem');
-const MenuCategory = require('../models/MenuCategory');
+import MenuItem from '../models/menuItem.js';
+import MenuCategory from '../models/MenuCategory.js';
 
 // Get all categories with items
-exports.getMenu = async (req, res) => {
+ export const getMenu = async (req, res) => {
   try {
     const categories = await MenuCategory.find({ isActive: true })
       .sort({ displayOrder: 1 });
-
+    
     const menu = await Promise.all(
       categories.map(async (category) => {
         const items = await MenuItem.find({
@@ -39,15 +39,15 @@ exports.getMenu = async (req, res) => {
 };
 
 // Get single menu item
-exports.getMenuItem = async (req, res) => {
+export const getMenuItem = async (req, res) => {
   try {
     const item = await MenuItem.findById(req.params.id)
       .populate('category', 'name');
 
     if (!item) {
       return res.status(404).json({ error: 'Menu item not found' });
+      
     }
-
     res.json({ success: true, item });
   } catch (error) {
     console.error('Get Menu Item Error:', error);
@@ -56,16 +56,34 @@ exports.getMenuItem = async (req, res) => {
 };
 
 // Search menu items
-exports.searchMenu = async (req, res) => {
+export const searchMenu = async (req, res) => {
   try {
-    const { q } = req.query;
+    // Get search term from body OR query params
+    const searchTerm = req.body.name || req.body.q || req.query.q;
 
+    // Validate search term
+    if (!searchTerm || searchTerm.trim() === '') {
+      return res.status(400).json({ 
+        error: 'Search query is required',
+        details: 'Please provide a search term'
+      });
+    }
+
+    // Search menu items
     const items = await MenuItem.find({
-      $text: { $search: q },
-      isAvailable: true,
+      $or: [
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } }
+      ],
+      isAvailable: true
     }).populate('category', 'name');
 
-    res.json({ success: true, items });
+    res.json({ 
+      success: true, 
+      count: items.length,
+      items 
+    });
+
   } catch (error) {
     console.error('Search Menu Error:', error);
     res.status(500).json({ error: 'Failed to search menu' });
@@ -75,7 +93,7 @@ exports.searchMenu = async (req, res) => {
 // ===== STAFF ONLY =====
 
 // Create category
-exports.createCategory = async (req, res) => {
+export const createCategory = async (req, res) => {
   try {
     const { name, description, displayOrder } = req.body;
 
@@ -86,6 +104,7 @@ exports.createCategory = async (req, res) => {
     });
 
     await category.save();
+    
 
     res.status(201).json({ success: true, category });
   } catch (error) {
@@ -95,7 +114,7 @@ exports.createCategory = async (req, res) => {
 };
 
 // Update category
-exports.updateCategory = async (req, res) => {
+export const updateCategory = async (req, res) => {
   try {
     const { name, description, displayOrder, isActive } = req.body;
 
@@ -117,7 +136,7 @@ exports.updateCategory = async (req, res) => {
 };
 
 // Delete category
-exports.deleteCategory = async (req, res) => {
+export const deleteCategory = async (req, res) => {
   try {
     const category = await MenuCategory.findByIdAndDelete(req.params.id);
 
@@ -127,7 +146,7 @@ exports.deleteCategory = async (req, res) => {
 
     // Delete all items in this category
     await MenuItem.deleteMany({ category: req.params.id });
-
+ 
     res.json({ success: true, message: 'Category deleted' });
   } catch (error) {
     console.error('Delete Category Error:', error);
@@ -136,7 +155,7 @@ exports.deleteCategory = async (req, res) => {
 };
 
 // Create menu item
-exports.createMenuItem = async (req, res) => {
+export const createMenuItem = async (req, res) => {
   try {
     const { categoryId, name, description, price, image, addOns } = req.body;
 
@@ -159,7 +178,7 @@ exports.createMenuItem = async (req, res) => {
 };
 
 // Update menu item
-exports.updateMenuItem = async (req, res) => {
+export const updateMenuItem = async (req, res) => {
   try {
     const { name, description, price, image, addOns, isAvailable } = req.body;
 
@@ -181,7 +200,7 @@ exports.updateMenuItem = async (req, res) => {
 };
 
 // Delete menu item
-exports.deleteMenuItem = async (req, res) => {
+export const deleteMenuItem = async (req, res) => {
   try {
     const item = await MenuItem.findByIdAndDelete(req.params.id);
 
@@ -197,7 +216,7 @@ exports.deleteMenuItem = async (req, res) => {
 };
 
 // Toggle item availability
-exports.toggleAvailability = async (req, res) => {
+export const toggleAvailability = async (req, res) => {
   try {
     const item = await MenuItem.findById(req.params.id);
 

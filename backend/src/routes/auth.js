@@ -1,9 +1,12 @@
-const express = require('express');
+import express from 'express';
+import { body } from 'express-validator';
+import { sendOTP, verifyOTP,updateProfile,getMe } from '../controllers/authController.js';
+import {loginUser, signUpUser} from '../controllers/userController.js';
+import {auth }from '../middleware/auth.js';
+import {validateRequest} from '../middleware/validateRequest.js';
+
 const router = express.Router();
-const { body } = require('express-validator');
-const authController = require('../controllers/authController');
-const { auth } = require('../middleware/auth');
-const validateRequest = require('../middleware/validateRequest');
+
 
 // Send OTP
 router.post(
@@ -12,7 +15,7 @@ router.post(
     body('phone').isMobilePhone('any').withMessage('Invalid phone number'),
   ],
   validateRequest,
-  authController.sendOTP
+  sendOTP
 );
 
 // Verify OTP
@@ -23,11 +26,11 @@ router.post(
     body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
   ],
   validateRequest,
-  authController.verifyOTP
+  verifyOTP
 );
 
 // Get current user
-router.get('/me', auth, authController.getMe);
+router.get('/me', getMe);
 
 // Update profile
 router.put(
@@ -38,7 +41,11 @@ router.put(
     body('email').optional().isEmail(),
   ],
   validateRequest,
-  authController.updateProfile
+ updateProfile
 );
 
-module.exports = router;
+router.post('/auth', loginUser);
+router.post('/signup', signUpUser);
+
+
+export default router;

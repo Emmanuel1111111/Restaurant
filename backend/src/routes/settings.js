@@ -1,10 +1,11 @@
-const express = require('express');
+import express from 'express';
+import {getSettings, updateSettings,toggleAcceptingOrders} from '../controllers/settingsController.js';
+import {auth, isStaff} from '../middleware/auth.js';
+          
 const router = express.Router();
-const settingsController = require('../controllers/settingsController');
-const { auth, isStaff } = require('../middleware/auth');
 
-router.get('/', settingsController.getSettings);
-router.put('/', auth, isStaff, settingsController.updateSettings);
-router.patch('/toggle-orders', auth, isStaff, settingsController.toggleAcceptingOrders);
+router.get('/setting', getSettings);
+router.put('/Update/setting', auth, isStaff, updateSettings);
+router.patch('/setting/toggle-orders', auth, isStaff, toggleAcceptingOrders);
 
-module.exports = router;
+export default router;

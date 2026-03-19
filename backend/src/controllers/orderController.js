@@ -1,12 +1,12 @@
-const Order = require('../models/Order');
-const MenuItem = require('../models/MenuItem');
-const Settings = require('../models/Settings');
-const User = require('../models/User');
-const Cart = require('../models/Cart');
-const { sendOrderConfirmationSMS, sendOrderStatusSMS } = require('../services/smsService');
+import Order from '../models/order.js';
+import MenuItem from '../models/menuItem.js';
+import Settings from '../models/settings.js';
+import User from '../models/Users.js';
+import Cart from '../models/Cart.js';
+import  { sendOrderConfirmationSMS, sendOrderStatusSMS } from '../services/smsService.js';
 
 // Create order
-exports.createOrder = async (req, res) => {
+export const createOrder = async (req, res) => {
   try {
     const {
       items,
@@ -118,7 +118,7 @@ exports.createOrder = async (req, res) => {
 };
 
 // Get user's orders
-exports.getMyOrders = async (req, res) => {
+export const getMyOrders = async (req, res) => {
   try {
     const { status } = req.query;
     const filter = { customer: req.userId };
@@ -139,7 +139,7 @@ exports.getMyOrders = async (req, res) => {
 };
 
 // Get single order
-exports.getOrder = async (req, res) => {
+export const getOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('customer', 'name phone')
@@ -163,7 +163,7 @@ exports.getOrder = async (req, res) => {
 };
 
 // Rate order
-exports.rateOrder = async (req, res) => {
+export const rateOrder = async (req, res) => {
   try {
     const { rating, review } = req.body;
 
@@ -195,7 +195,7 @@ exports.rateOrder = async (req, res) => {
 // ===== STAFF ONLY =====
 
 // Get all orders (staff)
-exports.getAllOrders = async (req, res) => {
+export const getAllOrders = async (req, res) => {
   try {
     const { status, date } = req.query;
     const filter = {};
@@ -225,7 +225,7 @@ exports.getAllOrders = async (req, res) => {
 };
 
 // Update order status
-exports.updateOrderStatus = async (req, res) => {
+export const updateOrderStatus = async (req, res) => {
   try {
     const { status, driverId } = req.body;
 
@@ -272,7 +272,7 @@ exports.updateOrderStatus = async (req, res) => {
 };
 
 // Cancel order
-exports.cancelOrder = async (req, res) => {
+export const cancelOrder = async (req, res) => {
   try {
     const { reason } = req.body;
 
@@ -299,7 +299,7 @@ exports.cancelOrder = async (req, res) => {
 };
 
 // Get order statistics
-exports.getOrderStats = async (req, res) => {
+export const getOrderStats = async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

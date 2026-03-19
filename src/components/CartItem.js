@@ -46,6 +46,7 @@ const CartItem = ({ item, index, onRemove, onUpdateQuantity }) => {
           )}
           <Text style={styles.price}>{formatCurrency(item.price)}</Text>
         </View>
+        
 
         {/* Actions */}
         <View style={styles.actions}>
